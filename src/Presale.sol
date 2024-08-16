@@ -10,6 +10,14 @@ contract Presale  {
     // AggregatorV3Interface internal dataFeedBNB;
     // AggregatorV3Interface internal dataFeedETH;
 
+    struct ReferralDetails {
+        uint investedAmount;
+        uint currency;
+        address addr;
+        uint timeStamp;
+    }
+    mapping (address => ReferralDetails[]) public referralDetails;
+
     mapping (address => uint) public totalTokensBought;
     mapping (address => uint) public referralIncome;
     
@@ -20,14 +28,14 @@ contract Presale  {
 
     address public owner;
 
-    uint public currentPrice;
+    uint public currentPrice = 100000000000000;
     uint public tokensSold;
 
     uint public amountInUSDT;
     uint public amountInETH;
     uint public amountInBNB;
     
-    constructor() {
+    constructor(address usdt, address usdc, address weth, address naxy) {
         // dataFeedBNB = AggregatorV3Interface(
         //     0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE  // BNB/USD
         // );
@@ -35,10 +43,18 @@ contract Presale  {
         //     0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e  // ETH/USD
         // );
 
-        NAXY = IERC20(0xf96fF891F0c271a89Dae17346791B1FA524fC681);
-        USDT_ADDRESS = 0x55d398326f99059fF775485246999027B3197955;
-        WETH_ADDRESS = 0x2170Ed0880ac9A755fd29B2688956BD959F933F8; 
-        BUSDC_ADDRESS = 0x2170Ed0880ac9A755fd29B2688956BD959F933F8; // change this 
+        // NAXY = IERC20(0xf96fF891F0c271a89Dae17346791B1FA524fC681);
+        // USDT_ADDRESS = 0x55d398326f99059fF775485246999027B3197955;
+        // WETH_ADDRESS = 0x2170Ed0880ac9A755fd29B2688956BD959F933F8; 
+        // BUSDC_ADDRESS = 0x2170Ed0880ac9A755fd29B2688956BD959F933F8; // change this 
+
+
+        NAXY = IERC20(naxy);
+        USDT_ADDRESS = usdt;
+        WETH_ADDRESS = weth; 
+        BUSDC_ADDRESS = usdc; // change this 
+
+
         owner = msg.sender;
     }
     
