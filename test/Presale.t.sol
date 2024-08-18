@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {Naxy} from "../src/Naxy.sol";
 import {USDT} from "../src/USDT.sol";
 import {BUSDC} from "../src/BUSDC.sol";
 import {Ether} from "../src/WETH.sol";
-
+import {console2} from "forge-std/console2.sol";
 import {Presale} from "../src/Presale.sol";
 
 
@@ -56,6 +56,8 @@ contract TestBeeBox is Test {
         usdt.mint(addr1, 2000 * 10 ** 18);
         usdt.mint(addr2, 2000 * 10 ** 18);
         usdt.mint(addr3, 2000 * 10 ** 18);
+        usdt.mint(addr4, 2000 * 10 ** 18);
+        usdt.mint(addr5, 2000 * 10 ** 18);
 
         busdc.mint(addr1, 2000 * 10 ** 18);
         busdc.mint(addr2, 2000 * 10 ** 18);
@@ -65,14 +67,51 @@ contract TestBeeBox is Test {
         naxy.mint(addr2, 2000 * 10 ** 18);
         naxy.mint(addr3, 2000 * 10 ** 18);
 
-        vm.prank(addr1);
+        weth.mint(addr1, 100 * 10 ** 18);
 
-        usdt.approve(contractAddr, 2000 * 10 ** 18);
-        
-        console.log(usdt.allowance(addr1, contractAddr));
+        vm.deal(addr1, 1000 ether);
         vm.prank(addr1);
-        presale.buyToken(1, 2000 * 10 ** 18);
-        console.log(presale.totalTokensBought(addr1));
+        presale.buyTokenWithBNB{value: 1 ether}(addr2);
+        console2.log("tokensSold", presale.tokensSold()/10**18);
+        vm.deal(addr3, 1000 ether);
+        vm.prank(addr3);
+        presale.buyTokenWithBNB{value: 1 ether}(addr1);
+        console2.log("tokensSold", presale.tokensSold()/10**18);
+        vm.deal(addr4, 1000 ether);
+        vm.prank(addr4);
+        presale.buyTokenWithBNB{value: 1 ether}(addr4);
+        console2.log("tokensSold", presale.tokensSold()/10**18);
+
+
+        // vm.prank(addr1);
+        // weth.approve(contractAddr, 2000 * 10 ** 18);
+        
+        // vm.prank(addr1);
+        // presale.buyToken(3, 1 * 10 ** 18, addr2);
+
+        // vm.prank(addr3);
+        // usdt.approve(contractAddr, 2000 * 10 ** 18);
+
+        // vm.prank(addr3);
+        // presale.buyToken(1, 2000 * 10 ** 18, addr1);
+
+        // vm.prank(addr4);
+        // usdt.approve(contractAddr, 2000 * 10 ** 18);
+
+        // vm.prank(addr4);
+        // presale.buyToken(1, 2000 * 10 ** 18, addr3);
+
+        // vm.prank(addr5);
+        // usdt.approve(contractAddr, 2000 * 10 ** 18);
+
+        // vm.prank(addr5);
+        // presale.buyToken(1, 2000 * 10 ** 18, addr4);
+
+        
+
+        
+
+        // console2.log(presale.users(msg.sender));
         
 
 

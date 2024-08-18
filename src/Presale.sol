@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
-
+import {console2} from "forge-std/console2.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol";
 // import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -11,15 +11,21 @@ contract Presale  {
     // AggregatorV3Interface internal dataFeedETH;
 
     struct ReferralDetails {
-        uint investedAmount;
+        uint amountReward;
+        uint totalBought;
         uint currency;
         address addr;
         uint timeStamp;
     }
-    mapping (address => ReferralDetails[]) public referralDetails;
 
-    mapping (address => uint) public totalTokensBought;
-    mapping (address => uint) public referralIncome;
+    struct User {
+        address reffBy;
+        uint totalTokensBought;
+        uint referralIncome;
+        ReferralDetails[] referralDetails;
+    }
+    mapping(address => User) public users;
+
     
     IERC20 public NAXY;
     address public USDT_ADDRESS;
@@ -32,8 +38,6 @@ contract Presale  {
     uint public tokensSold;
 
     uint public amountInUSDT;
-    uint public amountInETH;
-    uint public amountInBNB;
     
     constructor(address usdt, address usdc, address weth, address naxy) {
         // dataFeedBNB = AggregatorV3Interface(
@@ -94,45 +98,93 @@ contract Presale  {
     //     return uint256(answer*1e10);
     // }
 
-    function buyToken(uint currency, uint amountApproved) public returns (bool) {
+    function referralAwardToLevels(uint amount, uint currency) internal {
+        address curr = users[msg.sender].reffBy;
+        console2.log("amount", amount/10**18);
+        for(uint i = 1; i <= 3; i++){
+            if(curr == address(0) || curr == owner) break;
+            uint reward = (amount * getRewardPercentage(uint8(i))) / 100;
+            console2.log("reward for :",curr , "is: ", reward/10**18);
+            users[curr].referralDetails.push(ReferralDetails({
+                addr: msg.sender,
+                currency: currency,
+                totalBought: amount,
+                amountReward: reward,
+                timeStamp: block.timestamp 
+            }));
+            users[curr].referralIncome += reward;
+            curr = users[curr].reffBy;
+        }
+    }
+
+    function getRewardPercentage(uint8 level) internal pure returns (uint) {
+        if (level == 1) return 10;
+        if (level == 2) return 5;
+        if (level == 3) return 3;
+        return 0; // Default to 0% for unsupported levels
+    }
+
+
+    function buyToken(uint currency, uint amountApproved, address reffBy) public returns (bool) {
         IERC20 tokenContract;
         uint totalUsdt;
         if(currency == 1){   // USDT
             tokenContract = IERC20(USDT_ADDRESS);
-            amountInUSDT += amountApproved;
             totalUsdt = amountApproved;
-        } else if(currency == 2) {
+        } else if(currency == 2) { // BUSDC
             tokenContract = IERC20(BUSDC_ADDRESS);
-            amountInUSDT += amountApproved;
             totalUsdt = amountApproved;
         } else if(currency == 3) { // ETH
             tokenContract = IERC20(WETH_ADDRESS);
-            amountInETH += amountApproved;
             // uint256 ethPriceInUSD = getChainlinkDataFeedLatestAnswerETH(); 
-            totalUsdt = (amountApproved * 2635000000000000000000) / 1e18;   
+            totalUsdt = (amountApproved * 2635000000000000000000) / 10**18;
         } else {
             return false;
         }
-
+        require(amountInUSDT >= 10 * 10 ** 18, "Min amount to buy is worth $ 10");
+        amountInUSDT += totalUsdt;
+        require((reffBy != msg.sender || reffBy != address(0)), "Invalid Referral.");
+        if(users[msg.sender].reffBy == address(0)){
+            users[msg.sender].reffBy = reffBy;
+        } 
+   
         uint256 tokensToBuy = totalUsdt / currentPrice;
+
         require(tokenContract.allowance(msg.sender, address(this)) >= amountApproved, "Insufficient allowance");
         require(tokenContract.balanceOf(msg.sender) >= amountApproved, "Insufficient balance");
+        
         bool sent = tokenContract.transferFrom(msg.sender, owner, amountApproved);
-        // totalRaised += amountApproved;
         require(sent, "Token transfer failed");
+        
         tokensSold += tokensToBuy * 10 ** 18;   
-        totalTokensBought[msg.sender] += tokensToBuy * 10 ** 18;
+        
+        users[msg.sender].totalTokensBought += tokensToBuy * 10 ** 18;
+        referralAwardToLevels(tokensToBuy * 10 ** 18, currency);
         return true;
     }
 
-    function buyTokenWithBNB() public payable returns(bool) {
+    function buyTokenWithBNB(address reffBy) public payable returns(bool) {
         require(msg.value > 0, "No BNB sent");
+        
+        require((reffBy != msg.sender || reffBy != address(0)), "Invalid Referral.");
+        if(users[msg.sender].reffBy == address(0)){
+            users[msg.sender].reffBy = reffBy;
+        }
         // uint256 ethPriceInUSD = getChainlinkDataFeedLatestAnswerBNB(); 
+        console2.log("msg.value", msg.value/10**18);
         uint256 amountInUSD = (msg.value * 520000000000000000000) / 1e18;
+        console2.log("amountInUsd", amountInUSD/10**18);
         uint256 tokensToBuy = (amountInUSD * 1e18) / currentPrice;
+        console2.log("tokensToBuy", tokensToBuy/10**18);
         tokensSold += tokensToBuy; 
-        totalTokensBought[msg.sender] += tokensToBuy * 10 ** 18;
+        users[msg.sender].totalTokensBought += tokensToBuy * 10 ** 18;
+        referralAwardToLevels(tokensToBuy, 4);
+        // payable(owner).transfer(msg.value);
         return true;
+    }
+
+    function change(uint amount) public onlyOwner() {
+        amountInUSDT = amount;
     }
 }
 
