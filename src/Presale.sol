@@ -36,8 +36,8 @@ contract Presale  {
 
     uint public currentPrice = 100000000000000;
     uint public tokensSold;
-
     uint public amountInUSDT;
+    bool public isLocked = true;
     
     constructor(address usdt, address usdc, address weth, address naxy) {
         // dataFeedBNB = AggregatorV3Interface(
@@ -67,6 +67,10 @@ contract Presale  {
         _;
     }
 
+    function changePrice(uint newPrice) public onlyOwner {
+        currentPrice = newPrice;
+    }
+
     function changeOwner(address newOwner) public onlyOwner {
         require(owner != newOwner, "Invalid Address");
         owner = newOwner;
@@ -76,6 +80,19 @@ contract Presale  {
         uint256 NaxyBalance = NAXY.balanceOf(address(this));
         require(NaxyBalance > 0, "No SPY tokens to send");
         NAXY.transfer(recipient, NaxyBalance);
+    }
+
+    function activateNaxyAddress(address naxy) public onlyOwner() {
+        NAXY = IERC20(naxy);
+        // NAXY_ADDRESS = naxy;
+    }
+
+    function toggleLock() public onlyOwner() {
+        isLocked = !isLocked;
+    }
+
+    function change(uint amount) public onlyOwner() {
+        amountInUSDT = amount;
     }
 
     // function getChainlinkDataFeedLatestAnswerBNB() public view returns (uint256) {
@@ -100,11 +117,9 @@ contract Presale  {
 
     function referralAwardToLevels(uint amount, uint currency) internal {
         address curr = users[msg.sender].reffBy;
-        console2.log("amount", amount/10**18);
         for(uint i = 1; i <= 3; i++){
             if(curr == address(0) || curr == owner) break;
             uint reward = (amount * getRewardPercentage(uint8(i))) / 100;
-            console2.log("reward for :",curr , "is: ", reward/10**18);
             users[curr].referralDetails.push(ReferralDetails({
                 addr: msg.sender,
                 currency: currency,
@@ -137,26 +152,30 @@ contract Presale  {
         } else if(currency == 3) { // ETH
             tokenContract = IERC20(WETH_ADDRESS);
             // uint256 ethPriceInUSD = getChainlinkDataFeedLatestAnswerETH(); 
-            totalUsdt = (amountApproved * 2635000000000000000000) / 10**18;
+            uint256 ethPriceInUSD = 2635000000000000000000; 
+            totalUsdt = (amountApproved * ethPriceInUSD) / 10**18;
         } else {
             return false;
         }
-        require(amountInUSDT >= 10 * 10 ** 18, "Min amount to buy is worth $ 10");
+        require(totalUsdt >= 10 * 10 ** 18, "Min amount to buy is worth $ 10");
+        
         amountInUSDT += totalUsdt;
+        console2.log("totalUsdt: ", totalUsdt);
         require((reffBy != msg.sender || reffBy != address(0)), "Invalid Referral.");
         if(users[msg.sender].reffBy == address(0)){
             users[msg.sender].reffBy = reffBy;
         } 
    
         uint256 tokensToBuy = totalUsdt / currentPrice;
-
+        console2.log("tokensToBuy: ", tokensToBuy);
         require(tokenContract.allowance(msg.sender, address(this)) >= amountApproved, "Insufficient allowance");
         require(tokenContract.balanceOf(msg.sender) >= amountApproved, "Insufficient balance");
         
         bool sent = tokenContract.transferFrom(msg.sender, owner, amountApproved);
         require(sent, "Token transfer failed");
         
-        tokensSold += tokensToBuy * 10 ** 18;   
+        tokensSold += tokensToBuy * 10 ** 18;  
+        console2.log("tokensSold: ", tokensSold);
         
         users[msg.sender].totalTokensBought += tokensToBuy * 10 ** 18;
         referralAwardToLevels(tokensToBuy * 10 ** 18, currency);
@@ -165,26 +184,40 @@ contract Presale  {
 
     function buyTokenWithBNB(address reffBy) public payable returns(bool) {
         require(msg.value > 0, "No BNB sent");
-        
         require((reffBy != msg.sender || reffBy != address(0)), "Invalid Referral.");
         if(users[msg.sender].reffBy == address(0)){
             users[msg.sender].reffBy = reffBy;
         }
         // uint256 ethPriceInUSD = getChainlinkDataFeedLatestAnswerBNB(); 
-        console2.log("msg.value", msg.value/10**18);
-        uint256 amountInUSD = (msg.value * 520000000000000000000) / 1e18;
-        console2.log("amountInUsd", amountInUSD/10**18);
-        uint256 tokensToBuy = (amountInUSD * 1e18) / currentPrice;
-        console2.log("tokensToBuy", tokensToBuy/10**18);
-        tokensSold += tokensToBuy; 
+        uint256 ethPriceInUSD = 520000000000000000000; 
+        uint256 totalUsdt = (msg.value * ethPriceInUSD) / 1e18;
+        console2.log("totalUsdt", totalUsdt);
+        require(totalUsdt * 10 ** 18 >= 10 * 10 ** 18, "Min amount to buy is worth $ 10");
+        uint256 tokensToBuy = (totalUsdt * 1e18) / currentPrice;
+        console2.log("tokensToBuy", tokensToBuy);
+        tokensSold += tokensToBuy * 10 ** 18; 
+        console2.log("tokensSold", tokensSold);
+        amountInUSDT += totalUsdt * 10 ** 18;
         users[msg.sender].totalTokensBought += tokensToBuy * 10 ** 18;
-        referralAwardToLevels(tokensToBuy, 4);
+        referralAwardToLevels(tokensToBuy * 10 ** 18, 4);
         // payable(owner).transfer(msg.value);
         return true;
     }
 
-    function change(uint amount) public onlyOwner() {
-        amountInUSDT = amount;
+    function claim() public {
+        require(!isLocked, "claim function is locked");
+        uint totalAmount = users[msg.sender].totalTokensBought + users[msg.sender].referralIncome;
+        console2.log("totalAmount: ", totalAmount);
+        uint256 NaxyBalance = NAXY.balanceOf(address(this));
+        require(NaxyBalance >= totalAmount && totalAmount > 0, "No SPY tokens to send");
+        NAXY.transfer(msg.sender, totalAmount);
+        users[msg.sender].totalTokensBought = 0;
+        users[msg.sender].referralIncome = 0;
     }
-}
 
+    function getReferralDetails(address user) public view returns (ReferralDetails[] memory) {
+        return users[user].referralDetails;
+    }
+
+    
+}

@@ -62,50 +62,105 @@ contract TestBeeBox is Test {
         busdc.mint(addr1, 2000 * 10 ** 18);
         busdc.mint(addr2, 2000 * 10 ** 18);
         busdc.mint(addr3, 2000 * 10 ** 18);
+        busdc.mint(addr4, 2000 * 10 ** 18);
+        busdc.mint(addr5, 2000 * 10 ** 18);
         
-        naxy.mint(addr1, 2000 * 10 ** 18);
-        naxy.mint(addr2, 2000 * 10 ** 18);
-        naxy.mint(addr3, 2000 * 10 ** 18);
+        naxy.mint(address(presale), 200000000000 * 10 ** 18);
+        // naxy.mint(addr2, 2000 * 10 ** 18);
+        // naxy.mint(addr3, 2000 * 10 ** 18);
 
         weth.mint(addr1, 100 * 10 ** 18);
-
+        weth.mint(addr2, 100 * 10 ** 18);
+        weth.mint(addr3, 100 * 10 ** 18);
+        weth.mint(addr4, 100 * 10 ** 18);
+        weth.mint(addr5, 100 * 10 ** 18);
+        
         vm.deal(addr1, 1000 ether);
         vm.prank(addr1);
-        presale.buyTokenWithBNB{value: 1 ether}(addr2);
-        console2.log("tokensSold", presale.tokensSold()/10**18);
-        vm.deal(addr3, 1000 ether);
-        vm.prank(addr3);
-        presale.buyTokenWithBNB{value: 1 ether}(addr1);
-        console2.log("tokensSold", presale.tokensSold()/10**18);
-        vm.deal(addr4, 1000 ether);
-        vm.prank(addr4);
-        presale.buyTokenWithBNB{value: 1 ether}(addr4);
-        console2.log("tokensSold", presale.tokensSold()/10**18);
+        presale.buyTokenWithBNB{value: 1}(addr2);
+        
 
+        presale.toggleLock();
+        vm.prank(addr1);
+        presale.claim();
+        console2.log("naxy balance: ",naxy.balanceOf(addr1));
+        console2.log("total sold: ", presale.tokensSold());
+
+        vm.prank(addr2);
+        presale.claim();
+        
+        console2.log("naxy balance of address 2: ",naxy.balanceOf(addr2));
+        
+        // vm.deal(addr3, 1000 ether);
+        // vm.prank(addr3);
+        // presale.buyTokenWithBNB{value: 1 ether}(addr1);
+        // console2.log("tokensSold", presale.tokensSold()/10**18);
+        // vm.deal(addr4, 1000 ether);
+        // vm.prank(addr4);
+        // presale.buyTokenWithBNB{value: 1 ether}(addr4);
+        // console2.log("tokensSold", presale.tokensSold()/10**18);
 
         // vm.prank(addr1);
-        // weth.approve(contractAddr, 2000 * 10 ** 18);
+        // usdt.approve(contractAddr, 520 * 10 ** 18);
         
         // vm.prank(addr1);
-        // presale.buyToken(3, 1 * 10 ** 18, addr2);
+        // presale.buyToken(1, 520 * 10 ** 18, addr2);
+
+        // presale.toggleLock();
+
+        // vm.prank(addr1);
+        // presale.claim();
+
+        // console2.log("naxy balance: ",naxy.balanceOf(addr1));
+        // console2.log("total sold: ", presale.tokensSold());
+
+        // vm.prank(addr2);
+        // presale.claim();
+        
+        // console2.log("naxy balance of address 2: ",naxy.balanceOf(addr2));
+
+
+        // vm.prank(addr1);
+        // usdt.approve(contractAddr, 10 * 10 ** 18);
+        
+        // vm.prank(addr1);
+        // presale.buyToken(1, 10 * 10 ** 18, addr2);
+
+        // vm.prank(addr2);
+        // presale.claim();
+
+
+        // console2.log("owner usdt balance",usdt.balanceOf(presale.owner()));
+
+        // console2.log(presale.owner());
+
 
         // vm.prank(addr3);
-        // usdt.approve(contractAddr, 2000 * 10 ** 18);
+        // weth.approve(contractAddr, 1 * 10 ** 18);
 
         // vm.prank(addr3);
-        // presale.buyToken(1, 2000 * 10 ** 18, addr1);
+        // presale.buyToken(3, 1 * 10 ** 18, addr1);
+
+        // console2.log("tokensSold", presale.tokensSold()/10**18);
+
+        // vm.prank(addr1);
+        // presale.claim();
+        // console2.log(naxy.balanceOf(addr1) / 10**18);
+
 
         // vm.prank(addr4);
-        // usdt.approve(contractAddr, 2000 * 10 ** 18);
+        // weth.approve(contractAddr, 1 * 10 ** 18);
 
         // vm.prank(addr4);
-        // presale.buyToken(1, 2000 * 10 ** 18, addr3);
+        // presale.buyToken(3, 1 * 10 ** 18, addr3);
+
+        // console2.log("tokensSold", presale.tokensSold()/10**18);
 
         // vm.prank(addr5);
-        // usdt.approve(contractAddr, 2000 * 10 ** 18);
+        // weth.approve(contractAddr, 1 * 10 ** 18);
 
         // vm.prank(addr5);
-        // presale.buyToken(1, 2000 * 10 ** 18, addr4);
+        // presale.buyToken(3, 1 * 10 ** 18, addr4);
 
         
 
@@ -118,135 +173,5 @@ contract TestBeeBox is Test {
     }
 
 
-    // function test_ROI() public {
-    //     mytoken.mint(addr1, 2000 * 10 ** 18);
-    //     mytoken.mint(addr2, 2000 * 10 ** 18);
-    //     mytoken.mint(addr3, 2000 * 10 ** 18);
-    //     mytoken.mint(addr4, 2000 * 10 ** 18);
-    //     mytoken.mint(addr5, 2000 * 10 ** 18);
-    //     mytoken.mint(contractAddr, 6000 * 10 ** 18);
-    //     beebox.changeTokenAddress(tokenAddr);
-    //     beebox.changeOwnership(owner);
-
-    //     vm.warp(0); 
-    //     vm.prank(addr1);
-    //     mytoken.approve(contractAddr, 6000 * 10 ** 18);
-    //     vm.prank(addr1);
-    //     beebox.Invest(2000, owner);
-
-        
-    //     (uint a, uint b , address c, uint d) = beebox.Users(addr1);
-    //     console.log("for user: ", addr1);
-    //     console.log( "investedAmount", a);
-    //     console.log("totalProfit", b);
-    //     console.log( "referredBy", c);
-    //     console.log( "lastWithdraw", d);
-
-    //     vm.warp(17280000); 
-
-    //     vm.prank(addr1);
-    //     beebox.withdraw();
-
-    //     console.log(mytoken.balanceOf(addr1));
-
-    //     (a, b , c, d) = beebox.Users(addr1);
-    //     console.log("for user: ", addr1);
-    //     console.log( "investedAmount", a);
-    //     console.log("totalProfit", b);
-    //     console.log( "referredBy", c);
-    //     console.log( "lastWithdraw", d);
-
-    //     vm.warp(87280000);
-
-    //     vm.prank(addr1);
-    //     beebox.withdraw();
-    //     (a, b , c, d) = beebox.Users(addr1);
-    //     console.log("for user: ", addr1);
-    //     console.log( "investedAmount", a);
-    //     console.log("totalProfit", b);
-    //     console.log( "referredBy", c);
-    //     console.log( "lastWithdraw", d);
-    //     console.log(mytoken.balanceOf(addr1));
-
-    //     vm.prank(addr1);
-    //     beebox.Invest(2000, address(0));
-
-    //     (a, b , c, d) = beebox.Users(addr1);
-    //     console.log("for user: ", addr1);
-    //     console.log( "investedAmount", a);
-    //     console.log("totalProfit", b);
-    //     console.log( "referredBy", c);
-    //     console.log( "lastWithdraw", d);
-    //     console.log(mytoken.balanceOf(addr1));
-        
-    //     vm.prank(addr1);
-    //     beebox.Invest(2000, address(0));
-
-    //     vm.warp(104560000); 
-    //     vm.prank(addr1);
-    //     beebox.withdraw();
-    //     (a, b , c, d) = beebox.Users(addr1);
-    //     console.log("for user: ", addr1);
-    //     console.log( "investedAmount", a);
-    //     console.log("totalProfit", b);
-    //     console.log( "referredBy", c);
-    //     console.log( "lastWithdraw", d);
-    //     console.log(mytoken.balanceOf(addr1));
-
-    //     vm.warp(204560000); 
-
-    //     vm.prank(addr1);
-    //     beebox.withdraw();
-    //     (a, b , c, d) = beebox.Users(addr1);
-    //     console.log("for user: ", addr1);
-    //     console.log( "investedAmount", a);
-    //     console.log("totalProfit", b);
-    //     console.log( "referredBy", c);
-    //     console.log( "lastWithdraw", d);
-    //     console.log(mytoken.balanceOf(addr1));
-    //     console.log(mytoken.balanceOf(tokenAddr));
-
-
-        
-
-
-// 2000000000000000000000
-        // console.log(currentProfit);
-
-        // uint256 RATE_PER_SECOND = 578703; // 0.00000005787% * 1e8
-        // uint256 DECIMALS = 1e13; // Scaling factor
-
-        // uint amount = 1000 * 10 ** 18;
-        // uint secondsElapsed = 86400;
-
-        // // Calculate the profit as (amount * rate * time) / scaling factor
-        // // uint _amount = amount * 10 ** 18;
-        // uint256 totalProfit = (amount * RATE_PER_SECOND * secondsElapsed) / DECIMALS;
-    
-        
-        // console.log(totalProfit);
-
-        // 4999968000000000000
-        // 4999993920000000000
-        // 9999987840000000000
-        // 1999997568000000000000
-
-
-        // vm.prank(addr2);
-        // mytoken.approve(contractAddr, 2000 * 10 ** 18);
-        // vm.prank(addr2);
-        // beebox.Invest(2000, addr1);
-
-        // (, uint fg , uint ghd , , , ) = beebox.Users(addr1);
-        // console.log(ghd);
-
-        // (, fg , ghd , , , ) = beebox.Users(addr2);
-        // console.log(ghd);
-
-        
-
-
-    // }
-
-
+   
 }
