@@ -34,7 +34,7 @@ contract Presale  {
 
     address public owner;
 
-    uint public currentPrice = 100000000000000;
+    uint public currentPrice = 2000000000000000;
     uint public tokensSold;
     uint public amountInUSDT;
     bool public isLocked = true;
@@ -152,7 +152,7 @@ contract Presale  {
         } else if(currency == 3) { // ETH
             tokenContract = IERC20(WETH_ADDRESS);
             // uint256 ethPriceInUSD = getChainlinkDataFeedLatestAnswerETH(); 
-            uint256 ethPriceInUSD = 2635000000000000000000; 
+            uint256 ethPriceInUSD = 2349739400000000000000; 
             totalUsdt = (amountApproved * ethPriceInUSD) / 10**18;
         } else {
             return false;
@@ -160,28 +160,25 @@ contract Presale  {
         require(totalUsdt >= 10 * 10 ** 18, "Min amount to buy is worth $ 10");
         
         amountInUSDT += totalUsdt;
-        console2.log("totalUsdt: ", totalUsdt);
         require((reffBy != msg.sender || reffBy != address(0)), "Invalid Referral.");
         if(users[msg.sender].reffBy == address(0)){
             users[msg.sender].reffBy = reffBy;
         } 
    
-        uint256 tokensToBuy = totalUsdt / currentPrice;
-        console2.log("tokensToBuy: ", tokensToBuy);
+        uint256 tokensToBuy = (totalUsdt / currentPrice) * 1e18;
         require(tokenContract.allowance(msg.sender, address(this)) >= amountApproved, "Insufficient allowance");
         require(tokenContract.balanceOf(msg.sender) >= amountApproved, "Insufficient balance");
         
         bool sent = tokenContract.transferFrom(msg.sender, owner, amountApproved);
         require(sent, "Token transfer failed");
         
-        tokensSold += tokensToBuy * 10 ** 18;  
-        console2.log("tokensSold: ", tokensSold);
+        tokensSold += tokensToBuy;  
         
-        users[msg.sender].totalTokensBought += tokensToBuy * 10 ** 18;
-        referralAwardToLevels(tokensToBuy * 10 ** 18, currency);
+        users[msg.sender].totalTokensBought += tokensToBuy;
+        referralAwardToLevels(tokensToBuy, currency);
         return true;
     }
-
+    
     function buyTokenWithBNB(address reffBy) public payable returns(bool) {
         require(msg.value > 0, "No BNB sent");
         require((reffBy != msg.sender || reffBy != address(0)), "Invalid Referral.");

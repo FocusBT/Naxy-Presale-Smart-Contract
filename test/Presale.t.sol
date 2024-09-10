@@ -75,21 +75,21 @@ contract TestBeeBox is Test {
         weth.mint(addr4, 100 * 10 ** 18);
         weth.mint(addr5, 100 * 10 ** 18);
         
-        vm.deal(addr1, 1000 ether);
-        vm.prank(addr1);
-        presale.buyTokenWithBNB{value: 1}(addr2);
+        // vm.deal(addr1, 1000 ether);
+        // vm.prank(addr1);
+        // presale.buyTokenWithBNB{value: 1}(addr2);
         
 
-        presale.toggleLock();
-        vm.prank(addr1);
-        presale.claim();
-        console2.log("naxy balance: ",naxy.balanceOf(addr1));
-        console2.log("total sold: ", presale.tokensSold());
+        // presale.toggleLock();
+        // vm.prank(addr1);
+        // presale.claim();
+        // console2.log("naxy balance: ",naxy.balanceOf(addr1));
+        // console2.log("total sold: ", presale.tokensSold());
 
-        vm.prank(addr2);
-        presale.claim();
+        // vm.prank(addr2);
+        // presale.claim();
         
-        console2.log("naxy balance of address 2: ",naxy.balanceOf(addr2));
+        // console2.log("naxy balance of address 2: ",naxy.balanceOf(addr2));
         
         // vm.deal(addr3, 1000 ether);
         // vm.prank(addr3);
@@ -100,11 +100,15 @@ contract TestBeeBox is Test {
         // presale.buyTokenWithBNB{value: 1 ether}(addr4);
         // console2.log("tokensSold", presale.tokensSold()/10**18);
 
-        // vm.prank(addr1);
-        // usdt.approve(contractAddr, 520 * 10 ** 18);
+        vm.prank(addr1);
+        weth.approve(contractAddr, 4355000000000000);
         
-        // vm.prank(addr1);
-        // presale.buyToken(1, 520 * 10 ** 18, addr2);
+        vm.prank(addr1);
+        presale.buyToken(3, 4355000000000000, addr2);
+
+        console2.log("total sold: ", presale.tokensSold());
+        console2.log("Amount raised: ", presale.amountInUSDT());
+
 
         // presale.toggleLock();
 
